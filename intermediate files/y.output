@@ -1,0 +1,567 @@
+   0  $accept : prog $end
+
+   1  prog : statement prog
+   2       |
+
+   3  statement : while_statement
+   4            | assignment_statement
+   5            | print_statement
+
+   6  print_statement : TKPRINT TKID ';'
+
+   7  assignment_statement : TKID '=' integer_expression ';'
+
+   8  while_statement : TKWHILE '(' boolean_expr ')' '{' prog '}'
+
+   9  integer_expression : TKINT
+  10                     | TKID
+  11                     | integer_expression '+' integer_expression
+  12                     | integer_expression '-' integer_expression
+  13                     | integer_expression '*' integer_expression
+  14                     | integer_expression '/' integer_expression
+  15                     | integer_expression '%' integer_expression
+  16                     | '(' integer_expression ')'
+
+  17  boolean_expr : integer_expression '<' integer_expression
+  18               | integer_expression '>' integer_expression
+  19               | integer_expression TKEE integer_expression
+  20               | integer_expression TKLE integer_expression
+  21               | integer_expression TKGE integer_expression
+
+state 0
+	$accept : . prog $end  (0)
+	prog : .  (2)
+
+	TKPRINT  shift 1
+	TKWHILE  shift 2
+	TKID  shift 3
+	$end  reduce 2
+
+	prog  goto 4
+	statement  goto 5
+	while_statement  goto 6
+	assignment_statement  goto 7
+	print_statement  goto 8
+
+
+state 1
+	print_statement : TKPRINT . TKID ';'  (6)
+
+	TKID  shift 9
+	.  error
+
+
+state 2
+	while_statement : TKWHILE . '(' boolean_expr ')' '{' prog '}'  (8)
+
+	'('  shift 10
+	.  error
+
+
+state 3
+	assignment_statement : TKID . '=' integer_expression ';'  (7)
+
+	'='  shift 11
+	.  error
+
+
+state 4
+	$accept : prog . $end  (0)
+
+	$end  accept
+
+
+state 5
+	prog : statement . prog  (1)
+	prog : .  (2)
+
+	TKPRINT  shift 1
+	TKWHILE  shift 2
+	TKID  shift 3
+	$end  reduce 2
+	'}'  reduce 2
+
+	prog  goto 12
+	statement  goto 5
+	while_statement  goto 6
+	assignment_statement  goto 7
+	print_statement  goto 8
+
+
+state 6
+	statement : while_statement .  (3)
+
+	.  reduce 3
+
+
+state 7
+	statement : assignment_statement .  (4)
+
+	.  reduce 4
+
+
+state 8
+	statement : print_statement .  (5)
+
+	.  reduce 5
+
+
+state 9
+	print_statement : TKPRINT TKID . ';'  (6)
+
+	';'  shift 13
+	.  error
+
+
+state 10
+	while_statement : TKWHILE '(' . boolean_expr ')' '{' prog '}'  (8)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 17
+	boolean_expr  goto 18
+
+
+state 11
+	assignment_statement : TKID '=' . integer_expression ';'  (7)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 19
+
+
+state 12
+	prog : statement prog .  (1)
+
+	.  reduce 1
+
+
+state 13
+	print_statement : TKPRINT TKID ';' .  (6)
+
+	.  reduce 6
+
+
+state 14
+	integer_expression : TKID .  (10)
+
+	.  reduce 10
+
+
+state 15
+	integer_expression : TKINT .  (9)
+
+	.  reduce 9
+
+
+state 16
+	integer_expression : '(' . integer_expression ')'  (16)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 20
+
+
+state 17
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression . '<' integer_expression  (17)
+	boolean_expr : integer_expression . '>' integer_expression  (18)
+	boolean_expr : integer_expression . TKEE integer_expression  (19)
+	boolean_expr : integer_expression . TKLE integer_expression  (20)
+	boolean_expr : integer_expression . TKGE integer_expression  (21)
+
+	TKEE  shift 21
+	TKLE  shift 22
+	TKGE  shift 23
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	'<'  shift 29
+	'>'  shift 30
+	.  error
+
+
+state 18
+	while_statement : TKWHILE '(' boolean_expr . ')' '{' prog '}'  (8)
+
+	')'  shift 31
+	.  error
+
+
+state 19
+	assignment_statement : TKID '=' integer_expression . ';'  (7)
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	';'  shift 32
+	.  error
+
+
+state 20
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	integer_expression : '(' integer_expression . ')'  (16)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  shift 33
+	.  error
+
+
+state 21
+	boolean_expr : integer_expression TKEE . integer_expression  (19)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 34
+
+
+state 22
+	boolean_expr : integer_expression TKLE . integer_expression  (20)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 35
+
+
+state 23
+	boolean_expr : integer_expression TKGE . integer_expression  (21)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 36
+
+
+state 24
+	integer_expression : integer_expression '*' . integer_expression  (13)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 37
+
+
+state 25
+	integer_expression : integer_expression '/' . integer_expression  (14)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 38
+
+
+state 26
+	integer_expression : integer_expression '%' . integer_expression  (15)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 39
+
+
+state 27
+	integer_expression : integer_expression '+' . integer_expression  (11)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 40
+
+
+state 28
+	integer_expression : integer_expression '-' . integer_expression  (12)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 41
+
+
+state 29
+	boolean_expr : integer_expression '<' . integer_expression  (17)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 42
+
+
+state 30
+	boolean_expr : integer_expression '>' . integer_expression  (18)
+
+	TKID  shift 14
+	TKINT  shift 15
+	'('  shift 16
+	.  error
+
+	integer_expression  goto 43
+
+
+state 31
+	while_statement : TKWHILE '(' boolean_expr ')' . '{' prog '}'  (8)
+
+	'{'  shift 44
+	.  error
+
+
+state 32
+	assignment_statement : TKID '=' integer_expression ';' .  (7)
+
+	.  reduce 7
+
+
+state 33
+	integer_expression : '(' integer_expression ')' .  (16)
+
+	.  reduce 16
+
+
+state 34
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression TKEE integer_expression .  (19)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  reduce 19
+
+
+state 35
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression TKLE integer_expression .  (20)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  reduce 20
+
+
+state 36
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression TKGE integer_expression .  (21)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  reduce 21
+
+
+state 37
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression '*' integer_expression .  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+
+	'+'  shift 27
+	'-'  shift 28
+	TKEE  reduce 13
+	TKLE  reduce 13
+	TKGE  reduce 13
+	'*'  reduce 13
+	'/'  reduce 13
+	'%'  reduce 13
+	';'  reduce 13
+	')'  reduce 13
+	'<'  reduce 13
+	'>'  reduce 13
+
+
+state 38
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression '/' integer_expression .  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+
+	'+'  shift 27
+	'-'  shift 28
+	TKEE  reduce 14
+	TKLE  reduce 14
+	TKGE  reduce 14
+	'*'  reduce 14
+	'/'  reduce 14
+	'%'  reduce 14
+	';'  reduce 14
+	')'  reduce 14
+	'<'  reduce 14
+	'>'  reduce 14
+
+
+state 39
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	integer_expression : integer_expression '%' integer_expression .  (15)
+
+	'+'  shift 27
+	'-'  shift 28
+	TKEE  reduce 15
+	TKLE  reduce 15
+	TKGE  reduce 15
+	'*'  reduce 15
+	'/'  reduce 15
+	'%'  reduce 15
+	';'  reduce 15
+	')'  reduce 15
+	'<'  reduce 15
+	'>'  reduce 15
+
+
+state 40
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression '+' integer_expression .  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+
+	.  reduce 11
+
+
+state 41
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression '-' integer_expression .  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+
+	.  reduce 12
+
+
+state 42
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression '<' integer_expression .  (17)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  reduce 17
+
+
+state 43
+	integer_expression : integer_expression . '+' integer_expression  (11)
+	integer_expression : integer_expression . '-' integer_expression  (12)
+	integer_expression : integer_expression . '*' integer_expression  (13)
+	integer_expression : integer_expression . '/' integer_expression  (14)
+	integer_expression : integer_expression . '%' integer_expression  (15)
+	boolean_expr : integer_expression '>' integer_expression .  (18)
+
+	'*'  shift 24
+	'/'  shift 25
+	'%'  shift 26
+	'+'  shift 27
+	'-'  shift 28
+	')'  reduce 18
+
+
+state 44
+	while_statement : TKWHILE '(' boolean_expr ')' '{' . prog '}'  (8)
+	prog : .  (2)
+
+	TKPRINT  shift 1
+	TKWHILE  shift 2
+	TKID  shift 3
+	'}'  reduce 2
+
+	prog  goto 45
+	statement  goto 5
+	while_statement  goto 6
+	assignment_statement  goto 7
+	print_statement  goto 8
+
+
+state 45
+	while_statement : TKWHILE '(' boolean_expr ')' '{' prog . '}'  (8)
+
+	'}'  shift 46
+	.  error
+
+
+state 46
+	while_statement : TKWHILE '(' boolean_expr ')' '{' prog '}' .  (8)
+
+	.  reduce 8
+
+
+22 terminals, 8 nonterminals
+22 grammar rules, 47 states

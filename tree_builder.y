@@ -51,6 +51,11 @@ parameter:
     IDENTIFIER EQUAL NUMBER
     | IDENTIFIER EQUAL IDENTIFIER
     ;
+
+buildnode: 
+    TKBUILD "{" TKNAME "=" string_expression ";" TKWEIGHT "=" integer_expression ";" TKISACHILDOF "=" string_expression ";" "}" ";"	{$$ = new build_statement(my_sym_tab, $5, $9, $13);}
+
+
 %%
 #include "lex.yy.c"
 

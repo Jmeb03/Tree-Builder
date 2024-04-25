@@ -27,11 +27,6 @@ class integer_expression {
 };
 
 
-class boolean_expression {
- public:
-     virtual bool evaluate_expression(map<string, int> &sym_tab)=0;
-};
-
 
 class int_constant:public integer_expression {
  public:
@@ -312,3 +307,38 @@ class print_statement: public statement {
     integer_expression *e;
 
 };
+
+
+
+class build_statement { //note, this is from a version with binary trees
+	public:
+		build_statement(map<string, Tree_Node> &sym_tab, string_expression *n, integer_expression *w, string_expression *childOf)
+ 		{
+			name = n;
+			weight = w;
+			isachildof = childOf;
+		}				
+		virtual void evaluate_statement(map<string, Tree_Node> &sym_tab)	
+		{	//create the new node
+			Tree_Node *t = new Tree_Node;
+			t->name = name->evaluate_expression;
+			t->weight = w->evaluate_expression;	
+			t->r_child = NULL;
+			Tree_Node *parent;	// find the parent
+			map<string, Tree_Node>::iterator p;
+			p =sym_tab.find(isachildof->evaluate_expression);
+			if (&p!=sym_tab.end())
+ 			{	parent = p.second;		}
+			if (parent->r_child == NULL)
+			{	t->l_sibling = NULL;	}
+			else	{t.->l_sibling = parent->r_child;	}
+			parent->r_child = t;
+			sym_tab.insert(pair<string, Tree_Node>(t.name, *t);
+		}
+	private:
+		string_expression *name;
+		integer_expression  *weight;
+		string_expression  *isachildof;
+	}
+}
+

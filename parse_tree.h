@@ -17,7 +17,8 @@
 #include <set>
 #include <algorithm>
 #include <iostream>
-
+#include <memory>
+#include <optional>
 
 using namespace std;
 
@@ -25,7 +26,6 @@ class integer_expression {
  public:
   virtual int evaluate_expression(map<string, int> &sym_tab) =0;
 };
-
 
 
 class int_constant:public integer_expression {
@@ -64,6 +64,79 @@ class variable: public integer_expression {
  private:
   string saved_val;
   
+};
+
+class string_expression {
+public:
+    virtual ~string_expression() = default;
+
+    // Evaluate the expression and return the resulting string
+    virtual std::string evaluate_expression() const = 0;
+
+    // Display the expression (useful for debugging)
+    virtual void display() const = 0;
+};
+
+// Derived class for string constants
+class string_constant : public string_expression {
+private:
+    std::string value_;
+
+public:
+    explicit string_constant(const std::string& value) : value_(value) {}
+
+    std::string evaluate_expression() const override {
+        return value_;
+    }
+
+    void display() const override {
+        std::cout << "String Constant: \"" << value_ << "\"" << std::endl;
+    }
+};
+
+// Derived class for variables
+class string_variable : public string_expression {
+private:
+    std::string name_;
+
+public:
+    explicit string_variable(const std::string& var_name) : name_(var_name) {}
+
+    std::string evaluate_expression() const override {
+        // Placeholder for variable evaluation logic
+        return name_; // This would be replaced with actual variable resolution logic
+    }
+
+    void display() const override {
+        std::cout << "String Variable: " << name_ << std::endl;
+    }
+};
+
+// Derived class for concatenation expressions
+class concat_expression : public string_expression {
+private:
+    string_expression* left_;
+    string_expression* right_;
+
+public:
+    concat_expression(string_expression* left, string_expression* right) : left_(left), right_(right) {}
+
+    std::string evaluate_expression() const override {
+        return left_->evaluate_expression() + right_->evaluate_expression();
+    }
+
+    void display() const override {
+        std::cout << "Concatenation: ";
+        left_->display();
+        std::cout << " + ";
+        right_->display();
+        std::cout << std::endl;
+    }
+
+    ~concat_expression() { // Destructor to manage memory
+        delete left_;
+        delete right_;
+    }
 };
 
 class neg_constant: public integer_expression {
@@ -161,70 +234,6 @@ class mod_expr: public integer_expression {
     integer_expression *r;
 };
 
-
-class less_expr: public boolean_expression {
- public:
-  less_expr(integer_expression *left, integer_expression *right) {
-    l=left; r=right;
-  }
-  virtual bool evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) < r->evaluate_expression(sym_tab);
-  }
- private:
-  integer_expression *l;
-  integer_expression *r;
-};
-class greater_expr: public boolean_expression {
- public:
-  greater_expr(integer_expression *left, integer_expression *right) {
-    l=left; r=right;
-  }
-  virtual bool evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) > r->evaluate_expression(sym_tab);
-  }
- private:
-  integer_expression *l;
-  integer_expression *r;
-};
-class ge_expr: public boolean_expression {
- public:
-  ge_expr(integer_expression *left, integer_expression *right) {
-    l=left; r=right;
-  }
-  virtual bool evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) >= r->evaluate_expression(sym_tab);
-  }
- private:
-  integer_expression *l;
-  integer_expression *r;
-};
-class le_expr: public boolean_expression {
- public:
-  le_expr(integer_expression *left, integer_expression *right) {
-    l=left; r=right;
-  }
-  virtual bool evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) <= r->evaluate_expression(sym_tab);
-  }
- private:
-  integer_expression *l;
-  integer_expression *r;
-};
-class ee_expr: public boolean_expression {
- public:
-  ee_expr(integer_expression *left, integer_expression *right) {
-    l=left; r=right;
-  }
-  virtual bool evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) == r->evaluate_expression(sym_tab);
-  }
- private:
-  integer_expression *l;
-  integer_expression *r;
-};
-
-
-
 class statement {
  public:
   virtual void evaluate_statement(map<string, int> &sym_tab) =0;
@@ -251,25 +260,7 @@ class compound_statement: public statement {
 };
   
 
-class while_statement: public statement {
- public:
-  while_statement(boolean_expression *cond, compound_statement *body) {
-    c=cond;
-    b=body;
-  }
 
-  virtual void evaluate_statement(map<string, int> &sym_tab) {
-    while (c->evaluate_expression(sym_tab)) {
-      b->evaluate_statement(sym_tab);
-    }
-  }
-    
-
-    
-  private:
-    boolean_expression *c;
-    compound_statement *b;
-  };
 
 class assignment_statement: public statement {
 
@@ -308,37 +299,4 @@ class print_statement: public statement {
 
 };
 
-
-
-class build_statement { //note, this is from a version with binary trees
-	public:
-		build_statement(map<string, Tree_Node> &sym_tab, string_expression *n, integer_expression *w, string_expression *childOf)
- 		{
-			name = n;
-			weight = w;
-			isachildof = childOf;
-		}				
-		virtual void evaluate_statement(map<string, Tree_Node> &sym_tab)	
-		{	//create the new node
-			Tree_Node *t = new Tree_Node;
-			t->name = name->evaluate_expression;
-			t->weight = w->evaluate_expression;	
-			t->r_child = NULL;
-			Tree_Node *parent;	// find the parent
-			map<string, Tree_Node>::iterator p;
-			p =sym_tab.find(isachildof->evaluate_expression);
-			if (&p!=sym_tab.end())
- 			{	parent = p.second;		}
-			if (parent->r_child == NULL)
-			{	t->l_sibling = NULL;	}
-			else	{t.->l_sibling = parent->r_child;	}
-			parent->r_child = t;
-			sym_tab.insert(pair<string, Tree_Node>(t.name, *t);
-		}
-	private:
-		string_expression *name;
-		integer_expression  *weight;
-		string_expression  *isachildof;
-	}
-}
 

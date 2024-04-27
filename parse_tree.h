@@ -19,12 +19,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include "tree_node.h"
 
 using namespace std;
 
 class integer_expression {
  public:
-  virtual int evaluate_expression(map<string, int> &sym_tab) =0;
+  virtual int evaluate_expression() =0;
 };
 
 
@@ -32,38 +33,11 @@ class int_constant:public integer_expression {
  public:
   int_constant(int val) {saved_val = val;}
 
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
+  virtual int evaluate_expression() {
     return saved_val;
   }
  private:
   int saved_val;
-};
-
-class variable: public integer_expression {
- public:
-  variable(char *in_val) {//cout << "Found variable = " << in_val << endl; 
-                          saved_val =in_val;}
-
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-
-    map<string,int>::iterator p;
-    p =sym_tab.find(saved_val);
-    //cout << "Looking up variable " << saved_val << endl;
-    if (p!=sym_tab.end()) {
-      //cout << "Returning value of variable " << saved_val << endl;
-      //cout << "= " << p->second << endl;
-
-      return p->second;
-    } else {
-      // ERROR .... for now return -1;
-      // Should throw error!
-      return -1;
-    }
-
-  }
- private:
-  string saved_val;
-  
 };
 
 class string_expression {
@@ -139,20 +113,6 @@ public:
     }
 };
 
-class neg_constant: public integer_expression {
- public:
-  neg_constant(integer_expression *ptr) {
-    eval_ptr = ptr;
-  }
-  
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return -eval_ptr->evaluate_expression(sym_tab);
-  }
-  integer_expression *eval_ptr;
-};
-
-
-
 class plus_expr: public integer_expression {
  public:
   plus_expr(integer_expression *left, integer_expression *right) {
@@ -160,73 +120,8 @@ class plus_expr: public integer_expression {
     r = right;
   }
 
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) + r->evaluate_expression(sym_tab);
-  }
-  
-  private:
-    integer_expression *l;
-    integer_expression *r;
-};
-
-class minus_expr: public integer_expression {
- public:
-  minus_expr(integer_expression *left, integer_expression *right) {
-    l = left;
-    r = right;
-  }
-
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) - r->evaluate_expression(sym_tab);
-  }
-  
-  private:
-    integer_expression *l;
-    integer_expression *r;
-};
-
-class mult_expr: public integer_expression {
- public:
-  mult_expr(integer_expression *left, integer_expression *right) {
-    l = left;
-    r = right;
-  }
-
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) * r->evaluate_expression(sym_tab);
-  }
-  
-  private:
-    integer_expression *l;
-    integer_expression *r;
-};
-
-
-class div_expr: public integer_expression {
- public:
-  div_expr(integer_expression *left, integer_expression *right) {
-    l = left;
-    r = right;
-  }
-
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) / r->evaluate_expression(sym_tab);
-  }
-  
-  private:
-    integer_expression *l;
-    integer_expression *r;
-};
-
-class mod_expr: public integer_expression {
- public:
-  mod_expr(integer_expression *left, integer_expression *right) {
-    l = left;
-    r = right;
-  }
-
-  virtual int evaluate_expression(map<string, int> &sym_tab) {
-    return l->evaluate_expression(sym_tab) % r->evaluate_expression(sym_tab);
+  virtual int evaluate_expression() {
+    return l->evaluate_expression() + r->evaluate_expression();
   }
   
   private:
@@ -236,7 +131,7 @@ class mod_expr: public integer_expression {
 
 class statement {
  public:
-  virtual void evaluate_statement(map<string, int> &sym_tab) =0;
+  virtual void evaluate_statement(map<string, TreeNode> &sym_tab) =0;
 };
 
 class compound_statement: public statement {
@@ -246,7 +141,7 @@ class compound_statement: public statement {
     r = rest;
   }
   
-  virtual void evaluate_statement(map<string, int> &sym_tab) {
+  virtual void evaluate_statement(map<string, TreeNode> &sym_tab) {
     if (f!=NULL) {
       f->evaluate_statement(sym_tab);
     }
@@ -259,44 +154,38 @@ class compound_statement: public statement {
   statement *f;
 };
   
+class build_statement : public statement {
+public:
+    // Constructor with a default value for `child_of_expr`
+    build_statement(string_expression* name_expr, integer_expression* weight_expr, string_expression* child_of_expr = nullptr)
+        : name_expr(name_expr), weight_expr(weight_expr), child_of_expr(child_of_expr) {}
 
+    void evaluate_statement(std::map<std::string, TreeNode>& sym_tab) {
+        std::string name = name_expr->evaluate_expression();
+        int weight = weight_expr->evaluate_expression();
+        std::string parent_name = (child_of_expr) ? child_of_expr->evaluate_expression() : "NONE";
 
+        // Create a new TreeNode
+        TreeNode new_node(name, weight);
 
-class assignment_statement: public statement {
+        sym_tab[name] = new_node;
 
- public:
-  assignment_statement(char *id, integer_expression *rhs) {
-    ident = id;
-    r_side = rhs;
-  }
-  virtual void evaluate_statement(map<string, int> &sym_tab) {
-    
-    int temp = r_side->evaluate_expression(sym_tab);
+        if (parent_name != "NONE") { // If it has a parent
+            auto parent_iter = sym_tab.find(parent_name);
+            if (parent_iter != sym_tab.end()) {
+                TreeNode& parent = parent_iter->second;
+                parent.addChild(new_node); // Add as a child to the parent
+                new_node.setParent(parent); // Establish parent-child relationship
+            }
+        }
 
-    //cout << "Assigning" << ident << " to " << temp << endl;
+        // Insert the new node into the symbol table
+    }
 
-    sym_tab[ident]=temp;
-  }
-
-
-  private: 
-    string ident;
-    integer_expression *r_side;
-  };
-
-class print_statement: public statement {
- public:
-  print_statement(integer_expression *expr) {
-    e=expr;
-  }
-  virtual void evaluate_statement(map<string, int> &sym_tab) {
-    cout << e->evaluate_expression(sym_tab) << endl;
-  }
-    
-
-  private:
-    integer_expression *e;
-
+private:
+    string_expression* name_expr;
+    integer_expression* weight_expr;
+    string_expression* child_of_expr;
 };
 
 

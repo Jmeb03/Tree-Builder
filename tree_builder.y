@@ -5,8 +5,12 @@
 #include <string>
 #include "parse_tree.h"
 
+std::map<std::string, TreeNode>* parser_result = nullptr;
+
 using namespace std;
 %}
+
+
 
 %union {
     integer_expression* i_ptr;
@@ -23,6 +27,8 @@ using namespace std;
 %type <i_ptr> integer_expression
 %type <s_ptr> statement build_statement
 %type <c_ptr> prog start_var
+%start start_var
+
 
 
 %{
@@ -40,9 +46,15 @@ extern void yyerror(char *String);
 start_var : prog { // At this point, the 
                    // the program is done --- let's evaluate the
                    // program
-                   map<string,int> my_sym_tab;
+                   map<string,TreeNode> my_sym_tab;
                    $$= $1;
-                   $1->evaluate_statement(my_sym_tab);
+                    
+                    if($$ != nullptr){
+                        $1->evaluate_statement(my_sym_tab); // Populate the symbol table
+                        parser_result = new std::map<std::string, TreeNode>(my_sym_tab);        
+                    }else{
+                        $$ = nullptr;
+                    }
 }
 
 
@@ -54,33 +66,21 @@ statement: build_statement {$$ = $1;}
          ;
 
 build_statement: TKBUILD '{' TKNAME '=' string_expression ';' TKWEIGHT'=' integer_expression ';' TKCHILD '=' string_expression ';' '}' ';' {
-    cout << "Name: " << $5 << " Weight: " << $9 << " Parent: " << $13 << endl;
-    $$ = NULL;}	
+    $$ = new build_statement($5, $9, $13);}	
     | TKBUILD '{' TKNAME '=' string_expression ';' TKWEIGHT '=' integer_expression ';' '}' ';' {
-    cout << "Name: " << $5 << " Weight: " << $9 << " Parent: NONE" << endl;
-    $$ = NULL;}
+    $$ = new build_statement($5, $9);}
     ;
 
-integer_expression: TKINT {cout << "Integer: " << $1 << endl;
+integer_expression: TKINT {
 		      $$ = new int_constant(atoi($1));}
-| TKID {cout << "Identifier: " << $1 << endl; 
-		        $$= new variable($1); }
-                | integer_expression '+' integer_expression {$$=new plus_expr($1,$3);}
+            | integer_expression '+' integer_expression {$$=new plus_expr($1,$3);}
                 ;
 
 string_expression: TKSTRING {
-    cout << "String: " << $1 << endl;
     if ($1 != nullptr) {
         $$ = new string_constant($1); // Ensure it's not null
     } else {
         yyerror("Null string encountered (TKSTRING)");
-    }
-}
-| TKID {
-    if ($1 != nullptr) {
-        $$ = new string_variable($1); // Ensure valid initialization
-    } else {
-        yyerror("Null identifier encountered (TKID)");
     }
 }
 | string_expression '+' string_expression {
@@ -88,7 +88,7 @@ string_expression: TKSTRING {
 }
 | string_expression '+' integer_expression {
     std::map<std::string, int> temp_map; // Declare the map variable
-    std::string int_str = std::to_string($3->evaluate_expression(temp_map)); // Convert to string
+    std::string int_str = std::to_string($3->evaluate_expression()); // Convert to string
     $$ = new concat_expression($1, new string_constant(int_str)); // Use the variable
 }
 
@@ -103,5 +103,19 @@ void yyerror(char *error_string){
 }
 
 int main() {
-    return yyparse();
+    if (yyparse() == 0) {
+       cout << "Symbol table:" << endl;
+       string root_str = "\"root\"";
+        for (const auto& entry : *parser_result) {
+            //std::cout << "Key: [" << entry.first << "], Node: " << entry.second.getName() << std::endl;
+            if(entry.first == root_str){
+                entry.second.display();
+                cout << endl;
+            }
+        }
+    } else {
+        std::cerr << "Parsing failed." << std::endl;
+    }
+
+    return 0;
 }
